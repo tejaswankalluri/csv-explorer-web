@@ -51,21 +51,21 @@ Use this structure for each task:
 
 ## Phase 1 - Worker + DuckDB Foundation
 
-- [ ] TASK-004: Create Worker message protocol types
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-004: Create Worker message protocol types
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-002
   - Deliverable: Strongly typed request/response interfaces.
 
-- [ ] TASK-005: Implement DuckDB WASM initialization in Worker
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-005: Implement DuckDB WASM initialization in Worker
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-004
   - Deliverable: Worker can initialize DuckDB and report readiness.
 
-- [ ] TASK-006: Implement Worker error handling + requestId routing
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-006: Implement Worker error handling + requestId routing
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-004
   - Deliverable: Stable request-response mapping and structured errors.
 
