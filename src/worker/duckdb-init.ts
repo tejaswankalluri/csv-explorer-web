@@ -6,11 +6,8 @@ export let conn: duckdb.AsyncDuckDBConnection | null = null;
 type DuckDBLogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
 
 /**
- * Initialize DuckDB WASM inside this worker thread.
- *
- * Strategy: Use JSDelivr bundles for WASM delivery. DuckDB's selectBundle()
- * picks the best bundle (EH if supported, else MVP) for the current browser.
- * We do NOT use createWorker() — DuckDB runs directly in this worker thread.
+ * Initialize DuckDB WASM using CDN bundles.
+ * Creates a separate worker for DuckDB to run in.
  */
 export async function initializeDuckDB(
   logLevel: DuckDBLogLevel = 'WARNING'
@@ -27,8 +24,20 @@ export async function initializeDuckDB(
 
   const logger = new duckdb.ConsoleLogger(logLevelMap[logLevel]);
 
-  db = new duckdb.AsyncDuckDB(logger);
+  // Create a worker from the bundle's mainWorker URL
+  const workerUrl = URL.createObjectURL(
+    new Blob([`importScripts("${bundle.mainWorker}");`], {
+      type: 'text/javascript',
+    })
+  );
+  const worker = new Worker(workerUrl);
+
+  // Pass the worker to AsyncDuckDB
+  db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  
+  URL.revokeObjectURL(workerUrl);
+  
   conn = await db.connect();
 
   const result = await conn.query('SELECT version() AS version');

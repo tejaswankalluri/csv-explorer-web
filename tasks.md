@@ -71,33 +71,33 @@ Use this structure for each task:
 
 ## Phase 2 - CSV Ingestion Pipeline
 
-- [ ] TASK-007: Build file upload UI and file handoff to Worker
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-007: Build file upload UI and file handoff to Worker
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-001
   - Deliverable: User can select CSV and trigger load.
 
-- [ ] TASK-008: Implement progressive CSV parsing with Papa Parse
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-008: Implement progressive CSV parsing with Papa Parse
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-005
   - Deliverable: CSV processed in chunks in Worker.
 
-- [ ] TASK-009: Implement chunk insertion into DuckDB table
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-009: Implement chunk insertion into DuckDB table
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-008
   - Deliverable: Parsed rows inserted in batches into DuckDB.
 
-- [ ] TASK-010: Add ingest progress events to UI
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-010: Add ingest progress events to UI
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-007, TASK-008, TASK-009
   - Deliverable: Progress bar and row counters update during load.
 
-- [ ] TASK-011: Add ingest cancel support
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-011: Add ingest cancel support
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-006, TASK-008
   - Deliverable: User can cancel ongoing ingest cleanly.
 

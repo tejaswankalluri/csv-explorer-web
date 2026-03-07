@@ -39,15 +39,25 @@ async function initDuckDB() {
   const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
   const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
   
-  const worker = await duckdb.createWorker(bundle.mainWorker);
+  // Create worker from CDN using Blob (avoids nested worker issues)
+  const workerUrl = URL.createObjectURL(
+    new Blob([`importScripts("${bundle.mainWorker}");`], {
+      type: 'text/javascript',
+    })
+  );
+  const worker = new Worker(workerUrl);
+  
   const logger = new duckdb.ConsoleLogger();
   const db = new duckdb.AsyncDuckDB(logger, worker);
   
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  URL.revokeObjectURL(workerUrl);
   
   return db;
 }
 ```
+
+**Important**: When running inside a custom Web Worker (not main thread), you MUST create a separate DuckDB worker using the Blob method. Passing `null` or attempting to run DuckDB directly in the same worker will cause "cannot send a message since the worker is not set" errors.
 
 ### Using Manual Bundles (For Production)
 
@@ -134,7 +144,7 @@ const result = await conn.query(`
 
 ## Web Worker Setup
 
-For heavy processing, run DuckDB in a Web Worker:
+For heavy processing, run DuckDB in a Web Worker. This requires creating a separate DuckDB worker using the Blob method:
 
 ### worker.ts
 
@@ -146,10 +156,20 @@ let conn: duckdb.AsyncDuckDBConnection | null = null;
 
 const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
 const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
-const worker = await duckdb.createWorker(bundle.mainWorker);
+
+// Create a separate DuckDB worker using Blob (critical for custom worker setups)
+const workerUrl = URL.createObjectURL(
+  new Blob([`importScripts("${bundle.mainWorker}");`], {
+    type: 'text/javascript',
+  })
+);
+const duckdbWorker = new Worker(workerUrl);
+
 const logger = new duckdb.ConsoleLogger();
-db = new duckdb.AsyncDuckDB(logger, worker);
+db = new duckdb.AsyncDuckDB(logger, duckdbWorker);
 await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+URL.revokeObjectURL(workerUrl);
+
 conn = await db.connect();
 
 self.onmessage = async (e: MessageEvent) => {
@@ -170,6 +190,23 @@ self.onmessage = async (e: MessageEvent) => {
     self.postMessage({ type: 'ERROR', payload: error.message, requestId });
   }
 };
+```
+
+### Common Error: "cannot send a message since the worker is not set"
+
+This error occurs when:
+1. Using `db.instantiate(bundle.mainModule, null)` in a custom worker
+2. Using `db.instantiate(bundle.mainModule, bundle.pthreadWorker)` but not passing a worker to `AsyncDuckDB`
+
+**The fix**: Always create a DuckDB worker using the Blob method and pass it to `AsyncDuckDB`:
+
+```typescript
+const workerUrl = URL.createObjectURL(
+  new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
+);
+const worker = new Worker(workerUrl);
+db = new duckdb.AsyncDuckDB(logger, worker);
+await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
 ```
 
 ### Main Thread Usage
@@ -280,7 +317,7 @@ const logger = new duckdb.ConsoleLogger(LogLevel.ERROR);
 ## Integration with React
 
 ```typescript
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import * as duckdb from '@duckdb/duckdb-wasm';
 
 export function useDuckDB() {
@@ -294,10 +331,20 @@ export function useDuckDB() {
       try {
         const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
         const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
-        const worker = await duckdb.createWorker(bundle.mainWorker);
+        
+        // Create DuckDB worker using Blob method
+        const workerUrl = URL.createObjectURL(
+          new Blob([`importScripts("${bundle.mainWorker}");`], {
+            type: 'text/javascript',
+          })
+        );
+        const worker = new Worker(workerUrl);
+        
         const logger = new duckdb.ConsoleLogger();
         const database = new duckdb.AsyncDuckDB(logger, worker);
         await database.instantiate(bundle.mainModule, bundle.pthreadWorker);
+        URL.revokeObjectURL(workerUrl);
+        
         const connection = await database.connect();
         
         setDb(database);
@@ -317,18 +364,24 @@ export function useDuckDB() {
 
 ## Vite Configuration
 
-For Vite projects, add the following to handle WASM files:
+For Vite projects, add the following to handle WASM files and Web Workers:
 
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  plugins: [react(), tailwindcss()],
   optimizeDeps: {
-    exclude: ['@duckdb/duckdb-wasm'],
+    exclude: ['@duckdb/duckdb-wasm'],  // Prevent Vite from pre-bundling WASM
   },
   build: {
-    target: 'esnext',
+    target: 'esnext',  // Required for top-level await and WebAssembly
+  },
+  worker: {
+    format: 'es',  // ES module workers
   },
 });
 ```

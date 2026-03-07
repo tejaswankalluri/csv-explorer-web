@@ -9,7 +9,8 @@ const DEFAULT_TIMEOUT_MS = 60_000;
 
 type StreamCallback = (response: WorkerResponse) => void;
 
-interface PendingRequest {
+export interface PendingRequest {
+  requestId: string;
   resolve: (value: WorkerResponse) => void;
   reject: (reason: Error) => void;
   timer: ReturnType<typeof setTimeout>;
@@ -19,6 +20,7 @@ interface PendingRequest {
 export class WorkerClient {
   private worker: Worker;
   private pending = new Map<string, PendingRequest>();
+  private lastRequestId: string | null = null;
 
   constructor(worker: Worker) {
     this.worker = worker;
@@ -37,6 +39,7 @@ export class WorkerClient {
   ): Promise<T> {
     const requestId = generateRequestId();
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.lastRequestId = requestId;
 
     return new Promise<T>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -47,6 +50,7 @@ export class WorkerClient {
       }, timeoutMs);
 
       this.pending.set(requestId, {
+        requestId,
         resolve: resolve as (v: WorkerResponse) => void,
         reject,
         timer,
@@ -61,6 +65,10 @@ export class WorkerClient {
         this.worker.postMessage(message);
       }
     });
+  }
+
+  getLastRequestId(): string | null {
+    return this.lastRequestId;
   }
 
   cancel(targetRequestId: string): void {
@@ -80,11 +88,11 @@ export class WorkerClient {
   }
 
   destroy(): void {
-    for (const [id, pending] of this.pending) {
+    for (const [, pending] of this.pending) {
       clearTimeout(pending.timer);
       pending.reject(new Error('Worker client destroyed'));
-      this.pending.delete(id);
     }
+    this.pending.clear();
     this.worker.terminate();
   }
 

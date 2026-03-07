@@ -3,15 +3,21 @@ import type {
   WorkerResponse,
   WorkerError,
   InitDuckDBReady,
+  LoadCSVRequest,
+  LoadCSVProgress,
+  LoadCSVComplete,
 } from '../types/worker-protocol';
 import { WorkerErrorCode } from '../types/worker-protocol';
-import { initializeDuckDB } from './duckdb-init';
+import { initializeDuckDB, db, conn } from './duckdb-init';
+import { loadCSV, CancelledError } from './csv-loader';
 
 interface RuntimeWorkerMessage {
   requestId?: unknown;
   type?: unknown;
   payload?: unknown;
 }
+
+const activeOperations = new Map<string, { cancelled: boolean }>();
 
 function isWorkerRequestType(type: unknown): type is WorkerRequest['type'] {
   return (
@@ -85,13 +91,81 @@ self.onmessage = async (event: MessageEvent<RuntimeWorkerMessage>) => {
         break;
       }
 
-      // LOAD_CSV, QUERY_PAGE, GET_STATS, CANCEL
-      // will be implemented in Phase 2 and Phase 3
-
-      case 'LOAD_CSV':
-      case 'QUERY_PAGE':
-      case 'GET_STATS':
       case 'CANCEL': {
+        const signal = activeOperations.get(msg.payload.targetRequestId);
+        if (signal) {
+          signal.cancelled = true;
+        }
+        break;
+      }
+
+      case 'LOAD_CSV': {
+        if (!db || !conn) {
+          respond<WorkerError>({
+            requestId: msg.requestId,
+            type: 'ERROR',
+            payload: {
+              code: WorkerErrorCode.INIT_FAILED,
+              message: 'DuckDB not initialized. Send INIT_DUCKDB first.',
+            },
+          });
+          break;
+        }
+
+        const signal = { cancelled: false };
+        activeOperations.set(msg.requestId, signal);
+
+        try {
+          const result = await loadCSV(
+            db,
+            conn,
+            msg as LoadCSVRequest,
+            (progress: LoadCSVProgress) => {
+              respond<LoadCSVProgress>(progress);
+            },
+            signal
+          );
+
+          if (!signal.cancelled) {
+            respond<LoadCSVComplete>({
+              requestId: msg.requestId,
+              type: 'LOAD_CSV_COMPLETE',
+              payload: result,
+            });
+          }
+        } catch (loadError) {
+          if (loadError instanceof CancelledError) {
+            respond<WorkerError>({
+              requestId: msg.requestId,
+              type: 'ERROR',
+              payload: {
+                code: WorkerErrorCode.CANCELLED,
+                message: 'Load cancelled',
+              },
+            });
+          } else {
+            respond<WorkerError>({
+              requestId: msg.requestId,
+              type: 'ERROR',
+              payload: {
+                code: WorkerErrorCode.CSV_PARSE_ERROR,
+                message:
+                  loadError instanceof Error
+                    ? loadError.message
+                    : String(loadError),
+                details:
+                  loadError instanceof Error ? loadError.stack : undefined,
+              },
+            });
+          }
+        } finally {
+          activeOperations.delete(msg.requestId);
+        }
+        break;
+      }
+
+      case 'QUERY_PAGE':
+      case 'GET_STATS': {
         respond<WorkerError>({
           requestId: msg.requestId,
           type: 'ERROR',
