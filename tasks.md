@@ -103,27 +103,27 @@ Use this structure for each task:
 
 ## Phase 3 - Query Engine + Pagination
 
-- [ ] TASK-012: Implement SQL query builder from table state
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-012: Implement SQL query builder from table state
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-004
   - Deliverable: Safe WHERE/ORDER BY/LIMIT/OFFSET generation.
 
-- [ ] TASK-013: Implement paginated query endpoint in Worker
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-013: Implement paginated query endpoint in Worker
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-005, TASK-012
   - Deliverable: Worker returns page rows for requested range.
 
-- [ ] TASK-014: Implement total-count query for current filter
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-014: Implement total-count query for current filter
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-013
   - Deliverable: UI can show total matched rows.
 
-- [ ] TASK-015: Add stale query protection (latest-wins)
-  - Status: TODO
-  - Owner: unassigned
+- [x] TASK-015: Add stale query protection (latest-wins)
+  - Status: DONE
+  - Owner: agent
   - Depends on: TASK-006, TASK-013
   - Deliverable: Older query responses are ignored.
 

@@ -6,10 +6,15 @@ import type {
   LoadCSVRequest,
   LoadCSVProgress,
   LoadCSVComplete,
+  QueryPageRequest,
+  QueryResult,
+  GetStatsRequest,
+  StatsResult,
 } from '../types/worker-protocol';
 import { WorkerErrorCode } from '../types/worker-protocol';
 import { initializeDuckDB, db, conn } from './duckdb-init';
 import { loadCSV, CancelledError } from './csv-loader';
+import { executeQuery, CancelledQueryError } from './query-executor';
 
 interface RuntimeWorkerMessage {
   requestId?: unknown;
@@ -18,6 +23,10 @@ interface RuntimeWorkerMessage {
 }
 
 const activeOperations = new Map<string, { cancelled: boolean }>();
+
+function quoteIdentifier(name: string): string {
+  return `"${name.replace(/"/g, '""')}"`;
+}
 
 function isWorkerRequestType(type: unknown): type is WorkerRequest['type'] {
   return (
@@ -164,16 +173,116 @@ self.onmessage = async (event: MessageEvent<RuntimeWorkerMessage>) => {
         break;
       }
 
-      case 'QUERY_PAGE':
+      case 'QUERY_PAGE': {
+        if (!db || !conn) {
+          respond<WorkerError>({
+            requestId: msg.requestId,
+            type: 'ERROR',
+            payload: {
+              code: WorkerErrorCode.INIT_FAILED,
+              message: 'DuckDB not initialized. Send INIT_DUCKDB first.',
+            },
+          });
+          break;
+        }
+
+        const signal = { cancelled: false };
+        activeOperations.set(msg.requestId, signal);
+
+        try {
+          const result = await executeQuery(
+            conn,
+            (msg as QueryPageRequest).payload.sql,
+            signal
+          );
+
+          if (!signal.cancelled) {
+            respond<QueryResult>({
+              requestId: msg.requestId,
+              type: 'QUERY_RESULT',
+              payload: result,
+            });
+          }
+        } catch (queryError) {
+          if (queryError instanceof CancelledQueryError) {
+            respond<WorkerError>({
+              requestId: msg.requestId,
+              type: 'ERROR',
+              payload: {
+                code: WorkerErrorCode.CANCELLED,
+                message: 'Query cancelled',
+              },
+            });
+          } else {
+            respond<WorkerError>({
+              requestId: msg.requestId,
+              type: 'ERROR',
+              payload: {
+                code: WorkerErrorCode.QUERY_ERROR,
+                message: queryError instanceof Error
+                  ? queryError.message
+                  : String(queryError),
+                details: queryError instanceof Error ? queryError.stack : undefined,
+              },
+            });
+          }
+        } finally {
+          activeOperations.delete(msg.requestId);
+        }
+        break;
+      }
+
       case 'GET_STATS': {
-        respond<WorkerError>({
-          requestId: msg.requestId,
-          type: 'ERROR',
-          payload: {
-            code: WorkerErrorCode.INVALID_REQUEST,
-            message: `Message type '${msg.type}' is not yet implemented.`,
-          },
-        });
+        if (!db || !conn) {
+          respond<WorkerError>({
+            requestId: msg.requestId,
+            type: 'ERROR',
+            payload: {
+              code: WorkerErrorCode.INIT_FAILED,
+              message: 'DuckDB not initialized. Send INIT_DUCKDB first.',
+            },
+          });
+          break;
+        }
+
+        try {
+          const tableName = (msg as GetStatsRequest).payload.tableName;
+          const quotedTable = quoteIdentifier(tableName);
+
+          const countResult = await conn.query(
+            `SELECT COUNT(*)::INTEGER AS cnt FROM ${quotedTable}`
+          );
+          const countRows = countResult.toArray();
+          const totalRows = Number(
+            (countRows[0] as Record<string, unknown>)?.cnt ?? 0
+          );
+
+          const describeResult = await conn.query(`DESCRIBE ${quotedTable}`);
+          const describeRows = describeResult.toArray() as Record<string, unknown>[];
+          const columns: { name: string; type: string; nullable: boolean }[] = describeRows.map((row) => ({
+            name: row['column_name'] as string,
+            type: row['column_type'] as string,
+            nullable: row['null'] !== 'NO',
+          }));
+
+          respond<StatsResult>({
+            requestId: msg.requestId,
+            type: 'STATS_RESULT',
+            payload: { tableName, totalRows, columns },
+          });
+        } catch (statsError) {
+          respond<WorkerError>({
+            requestId: msg.requestId,
+            type: 'ERROR',
+            payload: {
+              code: WorkerErrorCode.QUERY_ERROR,
+              message: statsError instanceof Error
+                ? statsError.message
+                : String(statsError),
+              details: statsError instanceof Error ? statsError.stack : undefined,
+            },
+          });
+        }
         break;
       }
     }
