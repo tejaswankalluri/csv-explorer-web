@@ -9,12 +9,18 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showLargeFileWarning, setShowLargeFileWarning] = useState(false);
+
+  const LARGE_FILE_THRESHOLD = 500 * 1024 * 1024; // 500MB
 
   const handleFile = useCallback(
     (file: File) => {
       if (!file.name.endsWith(".csv")) {
         alert("Please select a CSV file");
         return;
+      }
+      if (file.size > LARGE_FILE_THRESHOLD) {
+        setShowLargeFileWarning(true);
       }
       setSelectedFile(file);
       onFileSelected(file);
@@ -115,7 +121,7 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          {selectedFile ? (
+          {selectedFile && (
             <div className="p-8 flex items-center justify-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
                 <svg
@@ -144,7 +150,18 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
                 Ready to load
               </div>
             </div>
-          ) : (
+          )}
+
+          {showLargeFileWarning && (
+            <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 flex items-center gap-2">
+              <span className="text-xl">🦆</span>
+              <p className="text-sm text-amber-800">
+                Looks like the file is large. DuckDB is preparing...
+              </p>
+            </div>
+          )}
+
+          {!selectedFile && (
             <div className="p-12 flex flex-col items-center">
               <p className="text-lg font-medium text-slate-600">
                 {disabled ? "Initializing..." : "Drag & drop your CSV here"}
