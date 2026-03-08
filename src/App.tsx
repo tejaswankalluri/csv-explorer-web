@@ -161,7 +161,11 @@ function App() {
 
         {status === 'ready' && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+              <FileUpload onFileSelected={handleFileSelected} disabled={isDisabled} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
               <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 hover:shadow-xl transition-shadow">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,10 +195,6 @@ function App() {
                 <h3 className="text-lg font-bold text-slate-800 mb-2">Advanced Filtering</h3>
                 <p className="text-slate-500">Sort, filter, and search through your data with SQL-powered queries.</p>
               </div>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-              <FileUpload onFileSelected={handleFileSelected} disabled={isDisabled} />
             </div>
           </>
         )}
