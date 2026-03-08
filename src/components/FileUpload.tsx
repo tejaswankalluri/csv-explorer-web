@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from "react";
 
 interface FileUploadProps {
   onFileSelected: (file: File) => void;
@@ -12,14 +12,14 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
 
   const handleFile = useCallback(
     (file: File) => {
-      if (!file.name.endsWith('.csv')) {
-        alert('Please select a CSV file');
+      if (!file.name.endsWith(".csv")) {
+        alert("Please select a CSV file");
         return;
       }
       setSelectedFile(file);
       onFileSelected(file);
     },
-    [onFileSelected]
+    [onFileSelected],
   );
 
   const handleClick = () => {
@@ -59,9 +59,9 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
   return (
@@ -69,12 +69,26 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
       <div className="p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/25">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Upload your CSV file</h2>
-          <p className="text-slate-500">Supports files up to 500MB with millions of rows</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            Upload your CSV file
+          </h2>
+          <p className="text-slate-500">
+            Supports files up to 2GB with millions of rows
+          </p>
         </div>
 
         <input
@@ -89,11 +103,12 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
         <div
           className={`
             relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer
-            ${isDragging 
-              ? 'border-indigo-500 bg-indigo-50/50 scale-[1.02]' 
-              : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'
+            ${
+              isDragging
+                ? "border-indigo-500 bg-indigo-50/50 scale-[1.02]"
+                : "border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
             }
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
           `}
           onClick={handleClick}
           onDragOver={handleDragOver}
@@ -103,13 +118,27 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
           {selectedFile ? (
             <div className="p-8 flex items-center justify-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-6 h-6 text-indigo-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
               <div className="text-left">
-                <p className="font-semibold text-slate-800">{selectedFile.name}</p>
-                <p className="text-sm text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                <p className="font-semibold text-slate-800">
+                  {selectedFile.name}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {formatFileSize(selectedFile.size)}
+                </p>
               </div>
               <div className="ml-auto px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">
                 Ready to load
@@ -118,17 +147,16 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
           ) : (
             <div className="p-12 flex flex-col items-center">
               <p className="text-lg font-medium text-slate-600">
-                {disabled ? 'Initializing...' : 'Drag & drop your CSV here'}
+                {disabled ? "Initializing..." : "Drag & drop your CSV here"}
               </p>
-              <p className="text-sm text-slate-400 mt-2">
-                or click to browse
-              </p>
+              <p className="text-sm text-slate-400 mt-2">or click to browse</p>
             </div>
           )}
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-4">
-          Powered by DuckDB • Client-side processing • Your data never leaves your browser
+          Powered by DuckDB • Client-side processing • Your data never leaves
+          your browser
         </p>
       </div>
     </div>

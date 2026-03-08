@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef } from 'ag-grid-community';
-import { AllCommunityModule } from 'ag-grid-community';
+import { AllCommunityModule, themeQuartz } from 'ag-grid-community';
 import type { WorkerClient } from '../lib/worker-client';
 import type { ColumnInfo } from '../types/worker-protocol';
 import { createDuckDBDatasource } from '../lib/duckdb-datasource';
@@ -50,6 +50,7 @@ export function CsvGrid({ client, tableName, columns, totalRows }: CsvGridProps)
     <div style={{ height: '100vh', width: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1 }}>
         <AgGridReact
+          theme={themeQuartz}
           modules={[AllCommunityModule]}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
