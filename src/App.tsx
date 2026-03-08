@@ -107,21 +107,26 @@ function App() {
     );
   }
 
+  const isDisabled = status !== 'ready';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <div className="max-w-2xl mx-auto px-6 py-16">
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/25">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/25">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">CSV Explorer</h1>
-          <p className="text-slate-500">Fast, powerful CSV viewer powered by DuckDB</p>
+          <h1 className="text-4xl font-bold text-slate-800 mb-3">CSV Explorer</h1>
+          <p className="text-lg text-slate-500 max-w-xl mx-auto">
+            Fast, powerful CSV viewer powered by DuckDB. 
+            Explore millions of rows instantly with sorting, filtering, and more.
+          </p>
         </div>
 
         {status === 'loading' && (
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 mb-8">
             <div className="flex flex-col items-center justify-center">
               <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin"></div>
               <p className="mt-5 text-slate-600 font-medium">Loading...</p>
@@ -131,7 +136,7 @@ function App() {
         )}
 
         {status === 'initializing' && (
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 mb-8">
             <div className="flex flex-col items-center justify-center">
               <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin"></div>
               <p className="mt-5 text-slate-600 font-medium">Initializing...</p>
@@ -141,7 +146,7 @@ function App() {
         )}
 
         {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
                 <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -150,12 +155,48 @@ function App() {
               </div>
               <p className="font-semibold text-red-800">Failed to initialize</p>
             </div>
-            <p className="text-red-600 text-sm pl-13">{workerError}</p>
+            <p className="text-red-600 text-sm">{workerError}</p>
           </div>
         )}
 
-        {status === 'ready' && ingestState.phase === 'idle' && (
-          <FileUpload onFileSelected={handleFileSelected} />
+        {status === 'ready' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 hover:shadow-xl transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">Lightning Fast</h3>
+                <p className="text-slate-500">Process millions of rows instantly with DuckDB's powerful in-memory engine.</p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 hover:shadow-xl transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">Private & Secure</h3>
+                <p className="text-slate-500">Your data never leaves your browser. Everything runs locally with WebAssembly.</p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 hover:shadow-xl transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">Advanced Filtering</h3>
+                <p className="text-slate-500">Sort, filter, and search through your data with SQL-powered queries.</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+              <FileUpload onFileSelected={handleFileSelected} disabled={isDisabled} />
+            </div>
+          </>
         )}
 
         {ingestState.phase === 'reading' && (
@@ -214,7 +255,7 @@ function App() {
               </div>
               <p className="font-semibold text-red-800">Error loading file</p>
             </div>
-            <p className="text-red-600 text-sm mb-4 pl-13">{ingestState.message}</p>
+            <p className="text-red-600 text-sm mb-4">{ingestState.message}</p>
             <button
               onClick={handleReset}
               className="w-full px-4 py-3 bg-white border border-red-300 text-red-700 rounded-xl hover:bg-red-50 transition-colors font-medium"
@@ -223,6 +264,12 @@ function App() {
             </button>
           </div>
         )}
+
+        <div className="mt-12 text-center">
+          <p className="text-sm text-slate-400">
+            Open source • Free to use • No signup required
+          </p>
+        </div>
       </div>
     </div>
   );
