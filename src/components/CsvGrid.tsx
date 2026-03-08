@@ -65,6 +65,8 @@ export function CsvGrid({ client, tableName, columns, totalRows }: CsvGridProps)
           }}
           suppressCellFocus={false}
           animateRows={false}
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
         />
       </div>
     </div>
