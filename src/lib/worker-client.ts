@@ -105,7 +105,7 @@ export class WorkerClient {
       return;
     }
 
-    if (type === 'LOAD_CSV_PROGRESS') {
+    if (type === 'LOAD_DATASET_PROGRESS') {
       pending.onStream?.(response);
       return;
     }

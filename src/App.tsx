@@ -4,8 +4,15 @@ import { FileUpload } from "./components/FileUpload";
 import { ProgressBar } from "./components/ProgressBar";
 import { CsvGridView } from "./components/CsvGridView";
 import type { IngestState } from "./types/ingest-state";
-import type { LoadCSVComplete, LoadCSVProgress } from "./types/worker-protocol";
+import type {
+  LoadDatasetComplete,
+  LoadDatasetProgress,
+} from "./types/worker-protocol";
 import { WorkerRequestError } from "./lib/worker-client";
+import {
+  detectSupportedFileType,
+  getUnsupportedFileMessage,
+} from "./lib/file-types";
 
 function App() {
   const { status, error: workerError, client } = useWorker();
@@ -16,6 +23,16 @@ function App() {
   const handleFileSelected = useCallback(
     async (file: File) => {
       if (!client) return;
+
+      const fileType = detectSupportedFileType(file.name);
+
+      if (!fileType) {
+        setIngestState({
+          phase: "error",
+          message: getUnsupportedFileMessage(file.name),
+        });
+        return;
+      }
 
       setIngestState({
         phase: "reading",
@@ -33,21 +50,22 @@ function App() {
           rowsLoaded: 0,
           bytesProcessed: 0,
           totalBytes: buffer.byteLength,
-          currentPhase: "parsing",
+          currentPhase: "registering",
         });
 
-        const result = await client.request<LoadCSVComplete>(
-          "LOAD_CSV",
+        const result = await client.request<LoadDatasetComplete>(
+          "LOAD_DATASET",
           {
             fileName: file.name,
             fileContent: buffer,
+            fileType,
           },
           {
             transfer: [buffer],
             timeoutMs: 300_000,
             onStream: (msg) => {
-              if (msg.type === "LOAD_CSV_PROGRESS") {
-                const progress = msg as LoadCSVProgress;
+              if (msg.type === "LOAD_DATASET_PROGRESS") {
+                const progress = msg as LoadDatasetProgress;
                 setIngestState({
                   phase: "loading",
                   fileName: file.name,
@@ -130,11 +148,12 @@ function App() {
             </svg>
           </div>
           <h1 className="text-4xl font-bold text-slate-800 mb-3">
-            CSV Explorer
+            Data Explorer
           </h1>
           <p className="text-lg text-slate-500 max-w-xl mx-auto">
-            Fast, powerful CSV viewer powered by DuckDB. Explore millions of
-            rows instantly with sorting, filtering, and more.
+            Fast, powerful file viewer powered by DuckDB. Explore CSV,
+            Parquet, and Excel data instantly with sorting, filtering, and
+            more.
           </p>
         </div>
 

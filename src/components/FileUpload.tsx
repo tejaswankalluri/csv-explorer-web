@@ -1,4 +1,11 @@
 import { useRef, useState, useCallback } from "react";
+import {
+  ACCEPTED_FILE_TYPES,
+  detectSupportedFileType,
+  getUnsupportedFileMessage,
+} from "../lib/file-types";
+
+const LARGE_FILE_THRESHOLD = 500 * 1024 * 1024;
 
 interface FileUploadProps {
   onFileSelected: (file: File) => void;
@@ -11,12 +18,10 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showLargeFileWarning, setShowLargeFileWarning] = useState(false);
 
-  const LARGE_FILE_THRESHOLD = 500 * 1024 * 1024; // 500MB
-
   const handleFile = useCallback(
     (file: File) => {
-      if (!file.name.endsWith(".csv")) {
-        alert("Please select a CSV file");
+      if (!detectSupportedFileType(file.name)) {
+        alert(getUnsupportedFileMessage(file.name));
         return;
       }
       if (file.size > LARGE_FILE_THRESHOLD) {
@@ -90,17 +95,17 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            Upload your CSV file
+            Upload your data file
           </h2>
           <p className="text-slate-500">
-            Supports files up to 2GB with millions of rows
+            Supports CSV, Parquet, and .xlsx files up to 2GB
           </p>
         </div>
 
         <input
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept={ACCEPTED_FILE_TYPES}
           onChange={handleChange}
           className="hidden"
           disabled={disabled}
@@ -164,9 +169,11 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
           {!selectedFile && (
             <div className="p-12 flex flex-col items-center">
               <p className="text-lg font-medium text-slate-600">
-                {disabled ? "Initializing..." : "Drag & drop your CSV here"}
+                {disabled ? "Initializing..." : "Drag & drop your file here"}
               </p>
-              <p className="text-sm text-slate-400 mt-2">or click to browse</p>
+              <p className="text-sm text-slate-400 mt-2">
+                or click to browse CSV, Parquet, or .xlsx
+              </p>
             </div>
           )}
         </div>

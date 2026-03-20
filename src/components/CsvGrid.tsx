@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import type { ColDef } from 'ag-grid-community';
+import type { ColDef, GridReadyEvent } from 'ag-grid-community';
 import { AllCommunityModule, themeQuartz } from 'ag-grid-community';
 import type { WorkerClient } from '../lib/worker-client';
 import type { ColumnInfo } from '../types/worker-protocol';
@@ -12,6 +12,7 @@ interface CsvGridProps {
   tableName: string;
   columns: ColumnInfo[];
   totalRows: number;
+  search: string;
 }
 
 const rowNumberColumn: ColDef = {
@@ -28,13 +29,29 @@ const rowNumberColumn: ColDef = {
   },
 };
 
-export function CsvGrid({ client, tableName, columns, totalRows }: CsvGridProps) {
+export function CsvGrid({
+  client,
+  tableName,
+  columns,
+  totalRows,
+  search,
+}: CsvGridProps) {
+  const gridRef = useRef<AgGridReact<Record<string, unknown>>>(null);
   const columnDefs = useMemo(() => [rowNumberColumn, ...buildAgColumnDefs(columns)], [columns]);
 
   const datasource = useMemo(
-    () => createDuckDBDatasource(client, tableName, columns),
-    [client, tableName, columns]
+    () => createDuckDBDatasource(client, tableName, columns, search),
+    [client, tableName, columns, search]
   );
+
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) {
+      return;
+    }
+
+    api.setGridOption('datasource', datasource);
+  }, [datasource]);
 
   const defaultColDef = useMemo<ColDef>(
     () => ({
@@ -46,10 +63,15 @@ export function CsvGrid({ client, tableName, columns, totalRows }: CsvGridProps)
     []
   );
 
+  const handleGridReady = (event: GridReadyEvent) => {
+    event.api.setGridOption('datasource', datasource);
+  };
+
   return (
     <div style={{ height: '100vh', width: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1 }}>
         <AgGridReact
+          ref={gridRef}
           theme={themeQuartz}
           modules={[AllCommunityModule]}
           columnDefs={columnDefs}
@@ -60,9 +82,7 @@ export function CsvGrid({ client, tableName, columns, totalRows }: CsvGridProps)
           maxConcurrentDatasourceRequests={2}
           blockLoadDebounceMillis={50}
           infiniteInitialRowCount={Math.min(totalRows, 100)}
-          onGridReady={(event) => {
-            event.api.setGridOption('datasource', datasource);
-          }}
+          onGridReady={handleGridReady}
           suppressCellFocus={false}
           animateRows={false}
           enableCellTextSelection={true}

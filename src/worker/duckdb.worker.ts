@@ -3,9 +3,9 @@ import type {
   WorkerResponse,
   WorkerError,
   InitDuckDBReady,
-  LoadCSVRequest,
-  LoadCSVProgress,
-  LoadCSVComplete,
+  LoadDatasetRequest,
+  LoadDatasetProgress,
+  LoadDatasetComplete,
   QueryPageRequest,
   QueryResult,
   GetStatsRequest,
@@ -13,7 +13,7 @@ import type {
 } from '../types/worker-protocol';
 import { WorkerErrorCode } from '../types/worker-protocol';
 import { initializeDuckDB, db, conn } from './duckdb-init';
-import { loadCSV, CancelledError } from './csv-loader';
+import { loadDataset, CancelledError } from './dataset-loader';
 import { executeQuery, CancelledQueryError } from './query-executor';
 
 interface RuntimeWorkerMessage {
@@ -31,7 +31,7 @@ function quoteIdentifier(name: string): string {
 function isWorkerRequestType(type: unknown): type is WorkerRequest['type'] {
   return (
     type === 'INIT_DUCKDB' ||
-    type === 'LOAD_CSV' ||
+    type === 'LOAD_DATASET' ||
     type === 'QUERY_PAGE' ||
     type === 'GET_STATS' ||
     type === 'CANCEL'
@@ -108,7 +108,7 @@ self.onmessage = async (event: MessageEvent<RuntimeWorkerMessage>) => {
         break;
       }
 
-      case 'LOAD_CSV': {
+      case 'LOAD_DATASET': {
         if (!db || !conn) {
           respond<WorkerError>({
             requestId: msg.requestId,
@@ -125,20 +125,20 @@ self.onmessage = async (event: MessageEvent<RuntimeWorkerMessage>) => {
         activeOperations.set(msg.requestId, signal);
 
         try {
-          const result = await loadCSV(
+          const result = await loadDataset(
             db,
             conn,
-            msg as LoadCSVRequest,
-            (progress: LoadCSVProgress) => {
-              respond<LoadCSVProgress>(progress);
+            msg as LoadDatasetRequest,
+            (progress: LoadDatasetProgress) => {
+              respond<LoadDatasetProgress>(progress);
             },
             signal
           );
 
           if (!signal.cancelled) {
-            respond<LoadCSVComplete>({
+            respond<LoadDatasetComplete>({
               requestId: msg.requestId,
-              type: 'LOAD_CSV_COMPLETE',
+              type: 'LOAD_DATASET_COMPLETE',
               payload: result,
             });
           }
@@ -157,7 +157,7 @@ self.onmessage = async (event: MessageEvent<RuntimeWorkerMessage>) => {
               requestId: msg.requestId,
               type: 'ERROR',
               payload: {
-                code: WorkerErrorCode.CSV_PARSE_ERROR,
+                code: WorkerErrorCode.INGEST_ERROR,
                 message:
                   loadError instanceof Error
                     ? loadError.message

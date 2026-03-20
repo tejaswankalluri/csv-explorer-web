@@ -4,7 +4,7 @@ interface ProgressBarProps {
   bytesProcessed: number;
   totalBytes: number;
   rowsLoaded: number;
-  currentPhase: 'parsing' | 'inserting';
+  currentPhase: 'registering' | 'importing';
   onCancel?: () => void;
 }
 
@@ -20,7 +20,7 @@ export function ProgressBar({
   const percentage = totalBytes > 0 ? Math.round((bytesProcessed / totalBytes) * 100) : 0;
 
   const phaseLabel =
-    currentPhase === 'parsing' ? 'Registering file...' : 'Creating table from CSV...';
+    currentPhase === 'registering' ? 'Registering file...' : 'Importing data into DuckDB...';
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';

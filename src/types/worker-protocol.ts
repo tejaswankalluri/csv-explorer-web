@@ -15,13 +15,15 @@ export interface ColumnInfo {
   nullable: boolean;
 }
 
+export type SupportedFileType = 'csv' | 'parquet' | 'xlsx';
+
 /**
  * Error codes for structured worker error reporting.
  * Using a const object instead of enum to satisfy `erasableSyntaxOnly`.
  */
 export const WorkerErrorCode = {
   INIT_FAILED: 'INIT_FAILED',
-  CSV_PARSE_ERROR: 'CSV_PARSE_ERROR',
+  INGEST_ERROR: 'INGEST_ERROR',
   QUERY_ERROR: 'QUERY_ERROR',
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
   INVALID_REQUEST: 'INVALID_REQUEST',
@@ -43,15 +45,13 @@ export interface InitDuckDBRequest {
   };
 }
 
-export interface LoadCSVRequest {
+export interface LoadDatasetRequest {
   requestId: RequestId;
-  type: 'LOAD_CSV';
+  type: 'LOAD_DATASET';
   payload: {
     fileName: string;
     fileContent: ArrayBuffer;   // binary for Transferable efficiency
-    delimiter?: string;          // auto-detect if omitted
-    hasHeader?: boolean;         // default true
-    batchSize?: number;          // rows per INSERT batch, default 10000
+    fileType: SupportedFileType;
   };
 }
 
@@ -83,7 +83,7 @@ export interface CancelRequest {
 /** Union of all messages the main thread can send */
 export type WorkerRequest =
   | InitDuckDBRequest
-  | LoadCSVRequest
+  | LoadDatasetRequest
   | QueryPageRequest
   | GetStatsRequest
   | CancelRequest;
@@ -100,20 +100,20 @@ export interface InitDuckDBReady {
   };
 }
 
-export interface LoadCSVProgress {
+export interface LoadDatasetProgress {
   requestId: RequestId;
-  type: 'LOAD_CSV_PROGRESS';
+  type: 'LOAD_DATASET_PROGRESS';
   payload: {
     rowsLoaded: number;
     bytesProcessed: number;
     totalBytes: number;
-    phase: 'parsing' | 'inserting';
+    phase: 'registering' | 'importing';
   };
 }
 
-export interface LoadCSVComplete {
+export interface LoadDatasetComplete {
   requestId: RequestId;
-  type: 'LOAD_CSV_COMPLETE';
+  type: 'LOAD_DATASET_COMPLETE';
   payload: {
     tableName: string;
     totalRows: number;
@@ -156,8 +156,8 @@ export interface WorkerError {
 /** Union of all messages the worker can send */
 export type WorkerResponse =
   | InitDuckDBReady
-  | LoadCSVProgress
-  | LoadCSVComplete
+  | LoadDatasetProgress
+  | LoadDatasetComplete
   | QueryResult
   | StatsResult
   | WorkerError;

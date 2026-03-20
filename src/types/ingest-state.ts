@@ -6,11 +6,11 @@ export type IngestState =
   | {
       phase: 'loading';
       fileName: string;
-      fileSize: number;
-      rowsLoaded: number;
-      bytesProcessed: number;
-      totalBytes: number;
-      currentPhase: 'parsing' | 'inserting';
+    fileSize: number;
+    rowsLoaded: number;
+    bytesProcessed: number;
+    totalBytes: number;
+      currentPhase: 'registering' | 'importing';
     }
   | {
       phase: 'complete';

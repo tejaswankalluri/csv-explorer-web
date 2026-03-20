@@ -80,6 +80,11 @@ function buildFilterClause(filter: ColumnFilter): string | null {
   }
 }
 
+function buildSearchClause(column: string, search: string): string {
+  const escapedSearch = escapeString(search);
+  return `CAST(${quoteIdentifier(column)} AS VARCHAR) ILIKE '%${escapedSearch}%'`;
+}
+
 export function buildQuery(state: QueryState): BuiltQuery {
   const { tableName, filters, sort, search, searchColumns, offset, limit } = state;
 
@@ -92,9 +97,9 @@ export function buildQuery(state: QueryState): BuiltQuery {
   }
 
   if (search.trim() && searchColumns.length > 0) {
-    const escapedSearch = escapeString(search.trim());
-    const searchClauses = searchColumns.map(
-      (col) => `${quoteIdentifier(col)} ILIKE '%${escapedSearch}%'`
+    const normalizedSearch = search.trim();
+    const searchClauses = searchColumns.map((col) =>
+      buildSearchClause(col, normalizedSearch)
     );
     whereClauses.push(`(${searchClauses.join(' OR ')})`);
   }

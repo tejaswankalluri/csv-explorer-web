@@ -8,13 +8,9 @@ export function createDuckDBDatasource(
   client: WorkerClient,
   tableName: string,
   columns: ColumnInfo[],
+  search: string,
 ): IDatasource {
-  const searchColumns = columns
-    .filter((col) => {
-      const t = col.type.toUpperCase();
-      return t === 'VARCHAR' || t === 'TEXT' || t.startsWith('VARCHAR');
-    })
-    .map((col) => col.name);
+  const searchColumns = columns.map((col) => col.name);
 
   return {
     rowCount: undefined,
@@ -32,7 +28,7 @@ export function createDuckDBDatasource(
         tableName,
         filters,
         sort,
-        search: '',
+        search,
         searchColumns,
         offset,
         limit,
