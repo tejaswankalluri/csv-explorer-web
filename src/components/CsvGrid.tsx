@@ -68,7 +68,7 @@ export function CsvGrid({
   };
 
   return (
-    <div style={{ height: '100vh', width: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1 }}>
         <AgGridReact
           ref={gridRef}
@@ -82,6 +82,7 @@ export function CsvGrid({
           maxConcurrentDatasourceRequests={2}
           blockLoadDebounceMillis={50}
           infiniteInitialRowCount={Math.min(totalRows, 100)}
+          alwaysShowHorizontalScroll={true}
           onGridReady={handleGridReady}
           suppressCellFocus={false}
           animateRows={false}
