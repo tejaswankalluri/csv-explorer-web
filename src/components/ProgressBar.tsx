@@ -29,24 +29,24 @@ export function ProgressBar({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6">
+    <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-elevated)] p-6 shadow-[0_20px_60px_-36px_var(--shadow-color)]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-indigo-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="w-10 h-10 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center">
+            <svg className="w-5 h-5 text-[var(--accent-strong)] animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
           </div>
           <div>
-            <p className="font-semibold text-slate-800 truncate max-w-md">{fileName}</p>
-            <p className="text-sm text-slate-500">{formatFileSize(fileSize)}</p>
+            <p className="font-semibold text-[var(--text-primary)] truncate max-w-md">{fileName}</p>
+            <p className="text-sm text-[var(--text-muted)]">{formatFileSize(fileSize)}</p>
           </div>
         </div>
-        <span className="text-2xl font-bold text-indigo-600">{percentage}%</span>
+        <span className="text-2xl font-bold text-[var(--accent-strong)]">{percentage}%</span>
       </div>
 
       <div className="mb-3">
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-2 rounded-full overflow-hidden bg-[var(--panel-hover)]">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${percentage}%` }}
@@ -57,17 +57,17 @@ export function ProgressBar({
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-          <span className="text-slate-600">{phaseLabel}</span>
+          <span className="text-[var(--text-secondary)]">{phaseLabel}</span>
         </div>
         {rowsLoaded > 0 && (
-          <span className="text-slate-500 font-mono">{rowsLoaded.toLocaleString()} rows</span>
+          <span className="font-mono text-[var(--text-muted)]">{rowsLoaded.toLocaleString()} rows</span>
         )}
       </div>
 
       {onCancel && (
         <div className="mt-6 flex justify-center">
           <button 
-            className="px-6 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg transition-all duration-200 text-sm font-medium"
+            className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel-hover)] px-6 py-2 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:border-[var(--error-border)] hover:bg-[var(--error-bg)] hover:text-[var(--error-text)]"
             onClick={onCancel}
           >
             Cancel

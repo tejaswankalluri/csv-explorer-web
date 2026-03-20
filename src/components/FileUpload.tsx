@@ -76,7 +76,7 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+    <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--panel-elevated)] overflow-hidden text-[var(--text-primary)]">
       <div className="p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/25">
@@ -94,10 +94,10 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
             Upload your data file
           </h2>
-          <p className="text-slate-500">
+          <p className="text-[var(--text-muted)]">
             Supports CSV, Parquet, and .xlsx files up to 2GB
           </p>
         </div>
@@ -116,8 +116,8 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
             relative rounded-xl border-2 border-dashed transition-all duration-300 cursor-pointer
             ${
               isDragging
-                ? "border-indigo-500 bg-indigo-50/50 scale-[1.02]"
-                : "border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
+                ? "border-indigo-500 bg-indigo-500/8 scale-[1.02]"
+                : "border-[var(--panel-border)] hover:border-[var(--panel-border-strong)] hover:bg-[var(--panel-hover)]"
             }
             ${disabled ? "opacity-50 cursor-not-allowed" : ""}
           `}
@@ -128,9 +128,9 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
         >
           {selectedFile && (
             <div className="p-8 flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-indigo-600"
+                  className="w-6 h-6 text-[var(--accent-strong)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -144,23 +144,23 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
                 </svg>
               </div>
               <div className="text-left">
-                <p className="font-semibold text-slate-800">
+                <p className="font-semibold text-[var(--text-primary)]">
                   {selectedFile.name}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--text-muted)]">
                   {formatFileSize(selectedFile.size)}
                 </p>
               </div>
-              <div className="ml-auto px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">
+              <div className="ml-auto rounded-full bg-[var(--success-bg)] px-3 py-1 text-sm font-medium text-[var(--success-text)]">
                 Ready to load
               </div>
             </div>
           )}
 
           {showLargeFileWarning && (
-            <div className="px-4 py-3 bg-amber-50 border-t border-amber-200 flex items-center gap-2">
+            <div className="flex items-center gap-2 border-t border-[var(--warning-border)] bg-[var(--warning-bg)] px-4 py-3">
               <span className="text-xl">🦆</span>
-              <p className="text-sm text-amber-800">
+              <p className="text-sm text-[var(--warning-text)]">
                 Looks like the file is large. DuckDB is preparing...
               </p>
             </div>
@@ -168,17 +168,17 @@ export function FileUpload({ onFileSelected, disabled }: FileUploadProps) {
 
           {!selectedFile && (
             <div className="p-12 flex flex-col items-center">
-              <p className="text-lg font-medium text-slate-600">
+              <p className="text-lg font-medium text-[var(--text-secondary)]">
                 {disabled ? "Initializing..." : "Drag & drop your file here"}
               </p>
-              <p className="text-sm text-slate-400 mt-2">
+              <p className="text-sm text-[var(--text-faint)] mt-2">
                 or click to browse CSV, Parquet, or .xlsx
               </p>
             </div>
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-4">
+        <p className="text-center text-xs text-[var(--text-faint)] mt-4">
           Powered by DuckDB • Client-side processing • Your data never leaves
           your browser
         </p>

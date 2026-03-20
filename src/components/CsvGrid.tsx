@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, GridReadyEvent } from 'ag-grid-community';
-import { AllCommunityModule, themeQuartz } from 'ag-grid-community';
+import {
+  AllCommunityModule,
+  colorSchemeDark,
+  themeQuartz,
+} from 'ag-grid-community';
 import type { WorkerClient } from '../lib/worker-client';
+import type { ThemeMode } from '../lib/theme';
 import type { ColumnInfo } from '../types/worker-protocol';
 import { createDuckDBDatasource } from '../lib/duckdb-datasource';
 import { buildAgColumnDefs } from '../lib/ag-grid-columns';
@@ -13,7 +18,28 @@ interface CsvGridProps {
   columns: ColumnInfo[];
   totalRows: number;
   search: string;
+  themeMode: ThemeMode;
 }
+
+const lightGridTheme = themeQuartz.withParams({
+  backgroundColor: 'var(--panel-elevated)',
+  foregroundColor: 'var(--text-primary)',
+  headerBackgroundColor: 'var(--panel-hover)',
+  headerTextColor: 'var(--text-secondary)',
+  borderColor: 'var(--panel-border)',
+  accentColor: '#6366f1',
+});
+
+const darkGridTheme = themeQuartz
+  .withPart(colorSchemeDark)
+  .withParams({
+    backgroundColor: 'var(--panel-elevated)',
+    foregroundColor: 'var(--text-primary)',
+    headerBackgroundColor: 'var(--panel-hover)',
+    headerTextColor: 'var(--text-secondary)',
+    borderColor: 'var(--panel-border)',
+    accentColor: '#818cf8',
+  });
 
 const rowNumberColumn: ColDef = {
   headerName: '#',
@@ -35,9 +61,11 @@ export function CsvGrid({
   columns,
   totalRows,
   search,
+  themeMode,
 }: CsvGridProps) {
   const gridRef = useRef<AgGridReact<Record<string, unknown>>>(null);
   const columnDefs = useMemo(() => [rowNumberColumn, ...buildAgColumnDefs(columns)], [columns]);
+  const gridTheme = themeMode === 'dark' ? darkGridTheme : lightGridTheme;
 
   const datasource = useMemo(
     () => createDuckDBDatasource(client, tableName, columns, search),
@@ -72,7 +100,7 @@ export function CsvGrid({
       <div style={{ flex: 1 }}>
         <AgGridReact
           ref={gridRef}
-          theme={themeQuartz}
+          theme={gridTheme}
           modules={[AllCommunityModule]}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
